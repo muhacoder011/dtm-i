@@ -950,32 +950,14 @@
         function runAIAnalysis(total, r1, r2, r3, r4, r5, s1n, s2n){
             const aiText = document.getElementById('ai-text');
             const aiLoad = document.getElementById('ai-loading');
-            
+
             aiLoad.classList.remove('hidden');
             aiText.textContent = '';
-            
-            // Simulating AI thinking time
+
             setTimeout(() => {
                 aiLoad.classList.add('hidden');
-                
-                const percent = ((total / 189) * 100).toFixed(1);
-                
-                let advice = `Sizning jami ballingiz: ${total} / 189 (${percent}%)\n\n`;
-                
-                // 1. Umumiy baho va Imkoniyatlar
-                advice += `🎯 UMUMIY XULOSA:\n`;
-                if(total >= 160) {
-                    advice += `Ajoyib natija! Sizda Davlat granti asosida o'qish imkoniyati juda yuqori (90%+). Shu tempda davom eting va o'z ustingizda ishlashni to'xtatmang.\n`;
-                } else if(total >= 130) {
-                    advice += `Yaxshi natija. Sizda to'lov-kontrakt asosida ko'plab OTMlarga kirish imkoniyati mavjud. Ayrim viloyat OTMlarida yoki yangi yo'nalishlarda grantga ham ilinish mumkin.\n`;
-                } else if(total >= 90) {
-                    advice += `O'rtacha natija. To'lov-kontrakt yoki super-kontrakt asosida o'qish imkoniyati bor. Sizga kuchliroq tayyorgarlik ko'rishni tavsiya qilaman.\n`;
-                } else {
-                    advice += `Qoniqarsiz natija. Hozirgi bilimingiz bilan OTMga kirish juda qiyin. Asosiy fanlardan qo'shimcha darslarga qatnashishni qat'iy tavsiya qilaman.\n`;
-                }
-                
-                // 2. Kuchli va Zaif tomonlar
-                advice += `\n📊 FANLAR TAHLILI:\n`;
+
+                const totalPct = +(total / 189 * 100).toFixed(1);
                 const subjects = [
                     {name: 'Ona tili', r: r1},
                     {name: 'Matematika', r: r2},
@@ -983,37 +965,68 @@
                     {name: s1n, r: r4},
                     {name: s2n, r: r5}
                 ];
-                
-                let weakSubjects = [];
-                let strongSubjects = [];
-                
-                subjects.forEach(sub => {
-                    const p = sub.r.max > 0 ? (sub.r.score / sub.r.max) * 100 : 0;
-                    if(p < 50) weakSubjects.push(sub.name);
-                    else if(p > 80) strongSubjects.push(sub.name);
+
+                subjects.forEach(s => {
+                    s.pct = s.r.max > 0 ? +(s.r.score / s.r.max * 100).toFixed(1) : 0;
+                    s.contribution = +(s.r.score).toFixed(1);
                 });
-                
-                if(strongSubjects.length > 0) {
-                    advice += `✅ Kuchli fanlaringiz: ${strongSubjects.join(', ')}. Bu fanlardan o'zlashtirish darajangiz yuqori.\n`;
+
+                let admissionNote = '';
+                if (total >= 170) admissionNote = "Grantga qabul qilish imkoniyati juda yuqori (elit OTMlar).";
+                else if (total >= 150) admissionNote = "Grantga qabul qilish imkoniyati yuqori.";
+                else if (total >= 130) admissionNote = "Yaxshi imkoniyatlar, ayrim OTMlar va yo'nalishlarda grant yoki kontrakt aralash imkoniyatlari.";
+                else if (total >= 100) admissionNote = "O'rtacha. Kuchli tayyorgarlik bilan yaxshilanish mumkin.";
+                else admissionNote = "Past. Rejaga asoslangan tayyorgarlik talab etiladi.";
+
+                let out = '';
+                out += `Umumiy natija: ${total} / 189 (${totalPct}%).\n${admissionNote}\n\n`;
+
+                out += "Fanlar bo'yicha batafsil tahlil:\n";
+                subjects.forEach(s => {
+                    out += `- ${s.name}: ${s.r.score}/${s.r.max} ball (${s.pct}%) — hissasi: ${s.contribution} ball\n`;
+                });
+
+                const strong = subjects.filter(s => s.pct >= 80).map(s => s.name);
+                const mid = subjects.filter(s => s.pct >= 50 && s.pct < 80).map(s => s.name);
+                const weak = subjects.filter(s => s.pct < 50).map(s => s.name);
+
+                out += '\nKuchli fanlar: ' + (strong.length ? strong.join(', ') : 'yo\'q') + '\n';
+                out += "O' rta darajadagi fanlar: " + (mid.length ? mid.join(', ') : 'yo\'q') + '\n';
+                out += 'Zaif fanlar: ' + (weak.length ? weak.join(', ') : 'yo\'q') + '\n\n';
+
+                out += "Amaliy reja (qisqacha, 6 haftalik):\n";
+                const need150 = Math.max(0, 150 - total);
+                const need170 = Math.max(0, 170 - total);
+                out += `- Maqsad: +${need150} ball (150 uchun), +${need170} ball (170 uchun)\n`;
+
+                if (weak.length) {
+                    out += `- Prioritet: ${weak.join(', ')} — haftasiga 4–6 soat mavzu takrorlash va 3 ta sinov.\n`;
                 }
-                if(weakSubjects.length > 0) {
-                    advice += `⚠️ E'tibor qaratish kerak bo'lgan fanlar: ${weakSubjects.join(', ')}. Ushbu fanlardan 50% dan past natija ko'rsatdingiz.\n`;
-                } else {
-                    advice += `Barcha fanlardan o'zlashtirish darajangiz bir maromda.\n`;
+                if (mid.length) {
+                    out += `- O' rta: ${mid.join(', ')} — haftasiga 3–4 soat, fokus: test strategiyasi va vaqt boshqaruvi.\n`;
+                }
+                if (strong.length) {
+                    out += `- Saqlash: ${strong.join(', ')} — haftasiga 2–3 soat amaliyot.\n`;
                 }
 
-                // 3. Maslahatlar
-                advice += `\n💡 AI TAVSIYASI:\n`;
-                if (r4.score/r4.max < 0.6 || r5.score/r5.max < 0.6) {
-                    advice += `1. Mutaxassislik fanlaridan (3.1 va 2.1 ball beruvchi) ko'proq test ishlang. Ular umumiy balingizning katta qismini tashkil qiladi.\n`;
-                }
-                if (r1.score/r1.max < 0.5 || r2.score/r2.max < 0.5 || r3.score/r3.max < 0.5) {
-                    advice += `2. Majburiy fanlarga beparvo bo'lmang. Kichik ballar (1.1) yakunda hal qiluvchi bo'lishi mumkin.\n`;
-                }
-                advice += `3. Vaqtni taqsimlashni mashq qiling. Test jarayonida har bir savolga maksimal 2 daqiqa ajrating.\n`;
-                
-                aiText.textContent = advice;
-            }, 1500);
+                out += '\nMaqsadga erishish uchun aniq qadamlar:\n';
+                subjects.forEach(s => {
+                    if (s.pct < 50) {
+                        out += `* ${s.name}: 1) Asosiy nazariyani 2 haftada qayta ko'rib chiqing; 2) kuniga 20 ta test savoli (30 daqiqa); 3) xatolar jurnalini yuriting.\n`;
+                    } else if (s.pct < 80) {
+                        out += `* ${s.name}: 1) haftasiga 3 mashq test; 2) vaqt bosimi ostida yechimlar; 3) zaif mavzularni mini-dars bilan tozalang.\n`;
+                    } else {
+                        out += `* ${s.name}: 1) tezkor testlar bilan formani saqlang; 2) murakkab masalalarga vaqt ajrating; 3) to'liq imtihon simulyatsiyasi o'ting.\n`;
+                    }
+                });
+
+                out += '\n6 haftalik haftalik jadval (kunlik minimal vaqt):\n- Haftada 6 kun ishlang, 1 kun dam oling.\n- Kunlik: majburiy fanlar 60 min, 1-fan 60–90 min, 2-fan 45–60 min, test amaliyoti 30 min.\n\n';
+
+                out += "Qo'shimcha resurslar: DTM o'tgan yillar savollari, mavzu bo'yicha video darslar, xatolar jurnalini yuritish.\n\n";
+                out += "Xulosa: Muntazam va rejaga asoslangan mashq 6 haftada sezilarli natija beradi. Har haftada progressni qayd eting va rejangizni moslashtiring.\n";
+
+                aiText.textContent = out;
+            }, 800);
         }
     </script>
 </body>
