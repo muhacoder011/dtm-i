@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dtm-train-1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f7cff; --secondary: #9b5cff; --accent: #2ee7ff;
+            --bg: #030816; --card: rgba(8, 15, 35, 0.92); --border: rgba(87, 168, 255, 0.24);
+            --text: #f4f7ff; --muted: #92a3c7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        body {
+            background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(78, 124, 255, 0.28), transparent 28%),
+                radial-gradient(circle at 90% 0%, rgba(155, 92, 255, 0.28), transparent 30%),
+                radial-gradient(circle at 50% 100%, rgba(46, 231, 255, 0.18), transparent 35%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex; justify-content: center; gap: 30px; padding: 20px;
+            background: rgba(3, 8, 22, 0.82); backdrop-filter: blur(16px);
+            position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border);
+            box-shadow: 0 0 30px rgba(78, 124, 255, 0.16);
+        }
+        nav a { color: var(--muted); text-decoration: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        nav a:hover, nav a.active { color: var(--accent); text-shadow: 0 0 12px rgba(46, 231, 255, 0.6); }
+
+        .container { max-width: 1000px; margin: 100px auto 40px; padding: 0 20px; }
+
+        .glass-card {
+            background: var(--card); border-radius: 32px; border: 1px solid var(--border);
+            padding: 40px; backdrop-filter: blur(20px); box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        h1, h2 { font-family: 'Space Grotesk'; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; text-shadow: 0 0 20px rgba(46, 231, 255, 0.15); }
+
+        /* Form Elements */
+        .input-group { background: rgba(255,255,255,0.035); padding: 25px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: inset 0 0 24px rgba(78, 124, 255, 0.08); }
+        label { font-size: 12px; color: #8ba4d1; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px; }
+        select, input {
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+            background: rgba(4, 8, 24, 0.95); color: white; font-size: 16px; transition: 0.3s;
+        }
+        select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 18px rgba(46, 231, 255, 0.24); }
+
+        /* AI Recommendation Box */
+        .ai-box {
+            background: linear-gradient(135deg, rgba(79, 124, 255, 0.16), rgba(46, 231, 255, 0.12), rgba(155, 92, 255, 0.14));
+            border: 1px solid rgba(126, 194, 255, 0.35); border-radius: 24px; padding: 30px; margin-top: 25px; box-shadow: inset 0 0 25px rgba(46, 231, 255, 0.08);
+        }
+
+        /* Test Section */
+        .test-container { max-height: 600px; overflow-y: auto; padding-right: 15px; margin: 20px 0; }
+        .q-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; margin-bottom: 15px; border-left: 4px solid var(--primary); box-shadow: 0 0 18px rgba(79, 124, 255, 0.08); }
+        .opt-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .opt { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; cursor: pointer; text-align: center; border: 1px solid transparent; transition: 0.2s; font-size:14px; }
+        .opt:hover { border-color: var(--accent); background: rgba(46, 231, 255, 0.12); box-shadow: 0 0 12px rgba(46, 231, 255, 0.14); }
+        .opt.selected { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: var(--accent); box-shadow: 0 0 18px rgba(155, 92, 255, 0.28); }
+        .subject-btn { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; border: 2px solid var(--border); cursor: pointer; text-align: center; transition: 0.3s; color: var(--muted); font-size: 14px; font-weight: 600; }
+        .subject-btn:hover { border-color: var(--accent); color: white; box-shadow: 0 0 16px rgba(46, 231, 255, 0.16); }
+        .subject-btn.active { border-color: var(--accent); background: rgba(46,231,255,0.14); color: var(--accent); box-shadow: 0 0 18px rgba(46, 231, 255, 0.18); }
+        .subject-btn.recommended { border-color: var(--secondary); background: rgba(155,92,255,0.14); color: #d4b2ff; }
+        .score-bar { background: rgba(255,255,255,0.05); border-radius: 10px; height: 12px; overflow: hidden; margin-top: 8px; }
+        .score-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
+        .rec-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-top: 15px; }
+        .section-label { background: var(--primary); color: white; padding: 8px 16px; border-radius: 10px; display: inline-block; margin: 20px 0 10px; font-size: 13px; font-weight: 700; }
+        .timer-display { font-family: 'Space Grotesk'; font-size: 20px; color: var(--accent); }
+
+        /* Buttons */
+        .btn-glow {
+            width: 100%; padding: 18px; border-radius: 16px; border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            color: white; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 16px;
+            box-shadow: 0 0 24px rgba(79, 124, 255, 0.28);
+        }
+        .btn-glow:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(46, 231, 255, 0.32); }
+
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 42px; font-family: 'Space Grotesk'; color: var(--accent); box-shadow: 0 0 28px rgba(46, 231, 255, 0.24); }
+
+        /* Search & Filter Styles */
+        .search-filter-container {
+            display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;
+        }
+        .search-box { flex: 2; min-width: 250px; }
+        .filter-group { flex: 1; display: flex; gap: 10px; min-width: 250px; }
+        
+        .uni-card {
+            background: rgba(255,255,255,0.03); padding: 25px; border-radius: 24px; 
+            border: 1px solid var(--border); transition: 0.3s;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .uni-card:hover { 
+            transform: translateY(-5px); border-color: var(--primary); 
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .uni-tag {
+            display: inline-block; padding: 4px 12px; border-radius: 20px; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            margin-right: 5px; margin-top: 10px;
+        }
+        .tag-it { background: rgba(34, 211, 238, 0.1); color: var(--accent); }
+        .tag-med { background: rgba(244, 63, 94, 0.1); color: #fb7185; }
+        .tag-econ { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+        .tag-law { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+
+        /* Detail Page Styles */
+        .detail-header { display: flex; gap: 30px; align-items: center; margin-bottom: 30px; }
+        .detail-img { width: 120px; height: 120px; border-radius: 24px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+        .fac-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .fac-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border); font-size: 14px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a onclick="show('home')" id="nav-home">Tizim</a>
+        <a onclick="show('unis')" id="nav-unis">OTMlar</a>
+        <a onclick="show('about')" id="nav-about">Loyiha haqida</a>
+    </nav>
+
+    <div class="container">
+        <section id="page-home" class="glass-card">
+            <h1>🇺🇿 DTM Test Simulyatsiya</h1>
+            <p style="color: #94a3b8; margin-bottom: 25px;">O'zbekiston Davlat Test Markazi (DTM) bazasiga mos test simulyatsiyasi. 90 ta savol, 3 soat, maksimal 189 ball.</p>
+
+            
+
+            <div class="ai-box" style="margin-bottom:25px">
+                <h3 style="color:var(--accent);margin-bottom:10px">📋 Test Tuzilmasi:</h3>
+                <p style="color:#cbd5e1;line-height:1.8">• <b>Majburiy fanlar</b>: Ona tili, Matematika, O'zbekiston tarixi — har biri 10 savol × 1.1 ball = <b>33 ball</b><br>• <b>1-asosiy fan</b>: 30 savol × 3.1 ball = <b>93 ball</b><br>• <b>2-asosiy fan</b>: 30 savol × 2.1 ball = <b>63 ball</b><br>• Jami: <b>90 savol, 189 ball, 3 soat</b></p>
+            </div>
+
+            <h3 style="margin-bottom:15px">2 ta asosiy fanni tanlang:</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:20px" id="subject-grid"></div>
+            
+            <div class="ai-box" style="margin-bottom:25px">
+                <h4 style="color:var(--accent);margin-bottom:10px">🏆 Milliy va Xalqaro Sertifikatlar:</h4>
+                <p style="color:#94a3b8;font-size:13px;margin-bottom:15px">Agar sizda sertifikat bo'lsa darajasini va olgan balingizni (0-100 oralig'ida) kiriting. DTM ballingiz shunga mos hisoblanadi.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+                    <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
+                        <label id="cert-1-label" style="display:block;margin-bottom:8px;font-size:14px;color:white">1-fan uchun sertifikat</label>
+                        <select id="cert-1-lvl" onchange="toggleCertScore(1)" disabled style="width:100%;margin-bottom:10px">
+                            <option value="none">Sertifikat yo'q</option>
+                            <option value="A+">A+ daraja (100%)</option>
+                            <option value="A">A daraja (100%)</option>
+                            <option value="B+">B+ daraja (% kiritish)</option>
+                            <option value="B">B daraja (% kiritish)</option>
+                            <option value="C+">C+ daraja (% kiritish)</option>
+                            <option value="C">C daraja (% kiritish)</option>
+                        </select>
+                        <input type="number" id="cert-1-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" style="width:100%;display:none">
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
+                        <label id="cert-2-label" style="display:block;margin-bottom:8px;font-size:14px;color:white">2-fan uchun sertifikat</label>
+                        <select id="cert-2-lvl" onchange="toggleCertScore(2)" disabled style="width:100%;margin-bottom:10px">
+                            <option value="none">Sertifikat yo'q</option>
+                            <option value="A+">A+ daraja (100%)</option>
+                            <option value="A">A daraja (100%)</option>
+                            <option value="B+">B+ daraja (% kiritish)</option>
+                            <option value="B">B daraja (% kiritish)</option>
+                            <option value="C+">C+ daraja (% kiritish)</option>
+                            <option value="C">C daraja (% kiritish)</option>
+                        </select>
+                        <input type="number" id="cert-2-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" style="width:100%;display:none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-box" style="margin-bottom:25px; margin-top:15px">
+                <h4 style="color:var(--accent);margin-bottom:10px">🎖 Majburiy Fanlar Sertifikatlari:</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px">
+                    <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
+                        <label style="display:block;margin-bottom:8px;font-size:14px;color:white">Ona tili (Majburiy)</label>
+                        <select id="cert-maj-ona" style="width:100%;margin-bottom:10px">
+                            <option value="none">Sertifikat yo'q</option>
+                            <option value="A+">A+ daraja (100%)</option>
+                            <option value="A">A daraja (100%)</option>
+                            <option value="B+">B+ daraja (100%)</option>
+                            <option value="B">B daraja (100%)</option>
+                            <option value="C+">C+ daraja (100%)</option>
+                            <option value="C">C daraja (100%)</option>
+                        </select>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
+                        <label style="display:block;margin-bottom:8px;font-size:14px;color:white">Matematika (Majburiy)</label>
+                        <select id="cert-maj-mat" style="width:100%;margin-bottom:10px">
+                            <option value="none">Sertifikat yo'q</option>
+                            <option value="A+">A+ daraja (100%)</option>
+                            <option value="A">A daraja (100%)</option>
+                            <option value="B+">B+ daraja (100%)</option>
+                            <option value="B">B daraja (100%)</option>
+                            <option value="C+">C+ daraja (100%)</option>
+                            <option value="C">C daraja (100%)</option>
+                        </select>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
+                        <label style="display:block;margin-bottom:8px;font-size:14px;color:white">O'zb. tarixi (Majburiy)</label>
+                        <select id="cert-maj-tar" style="width:100%;margin-bottom:10px">
+                            <option value="none">Sertifikat yo'q</option>
+                            <option value="A+">A+ daraja (100%)</option>
+                            <option value="A">A daraja (100%)</option>
+                            <option value="B+">B+ daraja (100%)</option>
+                            <option value="B">B daraja (100%)</option>
+                            <option value="C+">C+ daraja (100%)</option>
+                            <option value="C">C daraja (100%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <p id="sel-info" style="color:var(--accent);margin-bottom:20px;font-weight:700">Tanlangan: 0 / 2</p>
+            <button class="btn-glow" onclick="startDTMTest()" id="start-btn" disabled>IMTIHONNI BOSHLASH</button>
+        </section>
+
+        <section id="page-unis" class="glass-card hidden">
+            <h2>OTMlar Ma'lumotlar Bazasi</h2>
+            
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <input type="text" id="uni-search" placeholder="Universitet nomini yozing..." oninput="filterUnis()">
+                </div>
+                <div class="filter-group">
+                    <select id="filter-region" onchange="filterUnis()">
+                        <option value="all">Barcha hududlar</option>
+                        <option value="Toshkent">Toshkent</option>
+                        <option value="Samarqand">Samarqand</option>
+                        <option value="Farg'ona">Farg'ona</option>
+                        <option value="Andijon">Andijon</option>
+                        <option value="Xorazm">Xorazm</option>
+                        <option value="Namangan">Namangan</option>
+                        <option value="Buxoro">Buxoro</option>
+                        <option value="Surxondaryo">Surxondaryo</option>
+                        <option value="Qashqadaryo">Qashqadaryo</option>
+                        <option value="Sirdaryo">Sirdaryo</option>
+                        <option value="Jizzax">Jizzax</option>
+                    </select>
+                    <select id="filter-category" onchange="filterUnis()">
+                        <option value="all">Barcha yo'nalishlar</option>
+                        <option value="it">IT va Texnologiya</option>
+                        <option value="medicine">Tibbiyot</option>
+                        <option value="economy">Iqtisodiyot</option>
+                        <option value="law">Huquqshunoslik</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="uni-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;"></div>
+        </section>
+
+        <section id="page-about" class="glass-card hidden">
+            <h2>Loyiha Haqida</h2>
+            
+            <div class="ai-box" style="margin-bottom: 25px;">
+                <h3 style="color:var(--primary); margin-bottom:10px;">UniPath AI — Maqsad va Vazifalar</h3>
+                <p style="line-height:1.6; color:#cbd5e1; margin-bottom: 15px;">
+                    Ushbu loyiha abituriyentlarga O'zbekiston Respublikasi Davlat Test Markazi (DTM) standartlari asosida o'z bilimlarini sinab ko'rish imkoniyatini taqdim etadi. Platforma nafaqat test natijalarini hisoblaydi, balki to'plangan ballga asosan mos OTMlarni tavsiya qiladi.
+                </p>
+            </div>
+
+            <div class="info-grid">
+                <div class="uni-card">
+                    <h4 style="color:var(--accent); font-family:'Space Grotesk'">🤖 Sun'iy Intellekt Tahlili</h4>
+                    <p style="font-size:13px; color:#94a3b8; margin-top:10px;">Har bir foydalanuvchining test natijalari asosida AI yordamida chuqur tahlil o'tkaziladi va mos mutaxassisliklar hamda OTMlar bo'yicha shaxsiy maslahatlar beriladi.</p>
+                </div>
+                <div class="uni-card">
+                    <h4 style="color:var(--accent); font-family:'Space Grotesk'">🏆 Sertifikatlar tizimi</h4>
+                    <p style="font-size:13px; color:#94a3b8; margin-top:10px;">Asosiy va majburiy fanlar bo'yicha milliy yoki xalqaro sertifikatlar (masalan IELTS, milliy sertifikatlar) natijalari tizimda avtomatik ravishda hisobga olinadi.</p>
+                </div>
+                <div class="uni-card">
+                    <h4 style="color:var(--accent); font-family:'Space Grotesk'">🏫 Keng OTMlar bazasi</h4>
+                    <p style="font-size:13px; color:#94a3b8; margin-top:10px;">Respublikamizdagi barcha nufuzli Oliy Ta'lim Muassasalari va ularning taqdim etadigan yo'nalishlari yuzasidan to'liq ma'lumotlar to'plami yaratilgan.</p>
+                </div>
+                <div class="uni-card">
+                    <h4 style="color:var(--accent); font-family:'Space Grotesk'">⚡ Qulay Interfeys</h4>
+                    <p style="font-size:13px; color:#94a3b8; margin-top:10px;">Zamonaviy va foydalanishga qulay dizayn test jarayonini va natijalarni tahlil qilishni sezilarli darajada osonlashtiradi.</p>
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <p style="color: #64748b; font-size: 13px;">© 2026 UniPath AI. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </section>
+
+        <section id="page-test" class="glass-card hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+                <h2>DTM Imtihon (90 Savol)</h2>
+                <div class="timer-display" id="timer">03:00:00</div>
+            </div>
+            <div id="progress-info" style="color:#94a3b8;margin-bottom:15px;font-size:13px"></div>
+            <div class="test-container" id="test-list"></div>
+            <button class="btn-glow" onclick="calculateDTMResults()">NATIJANI HISOBLASH</button>
+        </section>
+
+        <section id="page-result" class="glass-card hidden">
+            <div class="score-circle" id="res-score">0</div>
+            <p style="text-align:center;color:#94a3b8;margin-bottom:25px" id="res-max">/ 189 ball</p>
+            <div id="score-breakdown"></div>
+            <div class="ai-box" style="margin-top:25px">
+                <h3 style="color:var(--accent);margin-bottom:10px">🎓 Tavsiya etiladigan OTMlar:</h3>
+                <div id="rec-unis"></div>
+            </div>
+            <div class="ai-box" style="margin-top:20px">
+                <h3 style="color:var(--primary);margin-bottom:10px">🤖 AI Mentor Tahlili:</h3>
+                <div id="ai-loading" class="hidden" style="text-align:center;padding:20px"><div style="display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div><p style="margin-top:10px;color:#94a3b8">AI tahlil qilmoqda...</p></div>
+                <div id="ai-text" style="line-height:1.8;color:#cbd5e1;white-space:pre-wrap"></div>
+            </div>
+            <button class="btn-glow" style="margin-top:30px;background:#1e293b" onclick="location.reload()">QAYTA BOSHLASH</button>
+        </section>
+
+        <section id="page-uni-details" class="glass-card hidden">
+            <div id="uni-details-content">
+                <!-- Content will be injected here -->
+            </div>
+            <button class="btn-glow" style="margin-top: 30px; background: #1e293b;" onclick="show('unis')">ORQAGA QAYTISH</button>
+        </section>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        function show(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('page-' + id).classList.remove('hidden');
+        }
+        let selectedSubjects=[], timerInterval, timeLeft=10800, currentQuizMode='dtm';
+        const electives=[
+            {id:"fizika",name:"Fizika"},
+            {id:"kimyo",name:"Kimyo"},
+            {id:"biologiya",name:"Biologiya"},
+            {id:"informatika",name:"Informatika"},
+            {id:"ingliz_tili",name:"Ingliz tili"},
+            {id:"geografiya",name:"Geografiya"},
+            {id:"huquq",name:"Huquq asoslari"},
+            {id:"jahon_tarixi",name:"Jahon tarixi"},
+            {id:"Matematika",name:"Matematika"}
+        ];
+        const subjectToCategory={
+            "fizika_informatika":"it","informatika_fizika":"it",
+            "fizika_matematika":"it","informatika_ingliz_tili":"it",
+            "biologiya_kimyo":"medicine","kimyo_biologiya":"medicine",
+            "geografiya_ingliz_tili":"economy","ingliz_tili_geografiya":"economy",
+            "geografiya_fizika":"economy","fizika_geografiya":"economy",
+            "huquq_jahon_tarixi":"law","jahon_tarixi_huquq":"law",
+            "huquq_ingliz_tili":"law","ingliz_tili_huquq":"law"
+        };
+        document.addEventListener('DOMContentLoaded',()=>{
+            const g=document.getElementById('subject-grid');
+            electives.forEach(s=>{
+                g.innerHTML+=`<div class="subject-btn" data-id="${s.id}" onclick="toggleSubject(this,'${s.id}')">${s.name}</div>`;
+            });
+        });
+        function toggleSubject(el,id){
+            if(el.classList.contains('active')){
+                el.classList.remove('active');
+                selectedSubjects=selectedSubjects.filter(s=>s!==id);
+            } else if(selectedSubjects.length<2){
+                el.classList.add('active');
+                selectedSubjects.push(id);
+            }
+            document.getElementById('sel-info').textContent=`Tanlangan: ${selectedSubjects.length} / 2`;
+            
+            // Update certificate labels and state
+            const cert1 = document.getElementById('cert-1-lvl');
+            const cert2 = document.getElementById('cert-2-lvl');
+            const cert1Label = document.getElementById('cert-1-label');
+            const cert2Label = document.getElementById('cert-2-label');
+            
+            if(selectedSubjects.length > 0) {
+                const s1 = electives.find(e => e.id === selectedSubjects[0]);
+                cert1Label.textContent = s1.name + " (1-fan) sertifikati";
+                cert1.disabled = false;
+            } else {
+                cert1Label.textContent = "1-fan uchun sertifikat";
+                cert1.disabled = true;
+                cert1.value = "none";
+                toggleCertScore(1);
+            }
+            
+            if(selectedSubjects.length > 1) {
+                const s2 = electives.find(e => e.id === selectedSubjects[1]);
+                cert2Label.textContent = s2.name + " (2-fan) sertifikati";
+                cert2.disabled = false;
+            } else {
+                cert2Label.textContent = "2-fan uchun sertifikat";
+                cert2.disabled = true;
+                cert2.value = "none";
+                toggleCertScore(2);
+            }
+
+            document.getElementById('start-btn').disabled=selectedSubjects.length!==2;
+        }
+
+        function toggleCertScore(num) {
+            const lvl = document.getElementById(`cert-${num}-lvl`).value;
+            const scoreInput = document.getElementById(`cert-${num}-score`);
+            if(lvl === 'none' || lvl === 'A+' || lvl === 'A') {
+                scoreInput.style.display = 'none';
+                if(lvl === 'none') scoreInput.value = '';
+            } else {
+                scoreInput.style.display = 'block';
+            }
+        }
+
+        const unisData = [
+            { 
+                name: "TATU", region: "Toshkent", cat: "it", 
+                desc: "Axborot texnologiyalari bo'yicha yetakchi OTM.",
+                longDesc: "Toshkent axborot texnologiyalari universiteti Muhammad al-Xorazmiy nomidagi axborot-kommunikatsiya texnologiyalari sohasida Markaziy Osiyodagi eng yirik oliy ta'lim muassasasidir.",
+                faculties: ["Kompüter injiniringi", "Dasturiy injiniring", "AT servis", "Kiberxavfsizlik"],
+                website: "https://tuit.uz", contact: "+998 71 238-64-15"
+            },
+            { 
+                name: "Inha University", region: "Toshkent", cat: "it", 
+                desc: "Janubiy Koreya bilan hamkorlikdagi IT universiteti.",
+                longDesc: "Toshkent shahridagi Inha universiteti (IUT) Janubiy Koreyaning Inha universiteti bilan hamkorlikda tashkil etilgan bo'lib, jahon standartlari darajasidagi IT mutaxassislarni tayyorlaydi.",
+                faculties: ["Computer Science and Engineering", "Business and Logistics"],
+                website: "https://inha.uz", contact: "+998 71 289-99-99"
+            },
+            { 
+                name: "Amity University", region: "Toshkent", cat: "it", 
+                desc: "Xalqaro standartlar asosidagi IT va boshqaruv.",
+                longDesc: "Amity universiteti Hindistonning eng yirik xususiy universiteti hisoblanib, Toshkentdagi filiali xalqaro diplom va sifatli ta'limni kafolatlaydi.",
+                faculties: ["IT", "Economics", "Management"],
+                website: "https://amity.uz", contact: "+998 71 207-90-06"
+            },
+            { 
+                name: "Yangi O'zbekiston Uni", region: "Toshkent", cat: "it", 
+                desc: "Prezident tashabbusi bilan tashkil etilgan zamonaviy universitet.",
+                longDesc: "Ushbu universitet O'zbekistondagi ilk 'Prezident universiteti' bo'lib, eng iqtidorli yoshlarni dunyo tan olgan olimlar qo'lida ta'lim olishga chorlaydi.",
+                faculties: ["Kimyo muhandisligi", "Mexanika muhandisligi", "Dasturiy injiniring"],
+                website: "https://newuzbekistanuniversity.uz", contact: "998 71 202-00-11"
+            },
+            { 
+                name: "Tashkent Med Academy", region: "Toshkent", cat: "medicine", 
+                desc: "Tibbiyot sohasidagi bosh tayanch oliygoh.",
+                longDesc: "Toshkent tibbiyot akademiyasi O'zbekistondagi tibbiyot yo'nalishidagi eng nufuzli va qadimiy oliygohlardan biri hisoblanadi.",
+                faculties: ["Davolash ishi", "Pediatriya", "Stomatologiya", "Tibbiy profilaktika"],
+                website: "https://tma.uz", contact: "+998 71 214-90-41"
+            },
+            { 
+                name: "Akfa University", region: "Toshkent", cat: "medicine", 
+                desc: "Zamonaviy xususiy tibbiyot universiteti.",
+                longDesc: "Akfa universiteti (hozirgi Central Asian University) zamonaviy tibbiyot va boshqa yo'nalishlar bo'yicha yuqori texnologik ta'lim beradi.",
+                faculties: ["Medicine", "Dentistry", "Nursing"],
+                website: "https://centralasian.uz", contact: "+998 71 200-01-23"
+            },
+            { 
+                name: "SamDTU", region: "Samarqand", cat: "medicine", 
+                desc: "Samarqand davlat tibbiyot universiteti.",
+                longDesc: "SamDTU Markaziy Osiyodagi eng qadimgi va eng nufuzli tibbiyot oliygohlaridan biri bo'lib, xalqaro hamkorlikka katta urg'u beradi.",
+                faculties: ["Davolash ishi", "Pediatriya", "Farmatsiya"],
+                website: "https://sammu.uz", contact: "+998 66 233-07-66"
+            },
+            { 
+                name: "TSUE (Narxoz)", region: "Toshkent", cat: "economy", 
+                desc: "Iqtisodiyot va biznes yo'nalishidagi yirik OTM.",
+                longDesc: "Toshkent davlat iqtisodiyot universiteti O'zbekistondagi iqtisodiyot sohasidagi eng yirik va yetakchi oliy ta'lim muassasasi hisoblanadi.",
+                faculties: ["Iqtisodiyot", "Biznes boshqaruvi", "Buxgalteriya", "Turizm"],
+                website: "https://tsue.uz", contact: "+998 71 239-28-72"
+            },
+            { 
+                name: "Westminster (WIUT)", region: "Toshkent", cat: "economy", 
+                desc: "Britaniya ta'lim standarti asosidagi xalqaro universitet.",
+                longDesc: "Toshkent shahridagi Vestminster xalqaro universiteti (WIUT) Londondagi Vestminster universiteti bilan hamkorlikda tashkil etilgan ilk Britaniya universiteti.",
+                faculties: ["Business Management", "Economics with Finance", "Commercial Law"],
+                website: "https://wiut.uz", contact: "+998 71 238-74-00"
+            },
+            { 
+                name: "Singapore Institute", region: "Toshkent", cat: "economy", 
+                desc: "Menejment va tadbirkorlik yo'nalishlari.",
+                longDesc: "MDIS Tashkent Singapur menejmentni rivojlantirish institutining filiali bo'lib, xalqaro ta'lim va amaliyotni birlashtiradi.",
+                faculties: ["Banking and Finance", "Industrial Management", "Fashion Design"],
+                website: "https://mdis.uz", contact: "+998 71 271-11-88"
+            },
+            { 
+                name: "TSUL (Yuridik)", region: "Toshkent", cat: "law", 
+                desc: "Huquqshunoslik bo'yicha markaziy universitet.",
+                longDesc: "Toshkent davlat yuridik universiteti O'zbekistondagi huquqiy ta'lim va ilm-fan markazi hisoblanadi.",
+                faculties: ["Davlat boshqaruvi", "Jinoyat huquqi", "Fuqarolik huquqi"],
+                website: "https://tsul.uz", contact: "+998 71 233-66-36"
+            },
+            { 
+                name: "JIDU (Diplomatiya)", region: "Toshkent", cat: "law", 
+                desc: "Xalqaro munosabatlar va huquq.",
+                longDesc: "Jahon iqtisodiyoti va diplomatiya universiteti xalqaro munosabatlar, tashqi iqtisodiy aloqalar va xalqaro huquq sohalari uchun kadrlarni tayyorlaydi.",
+                faculties: ["Xalqaro munosabatlar", "Xalqaro huquq", "Xalqaro iqtisodiyot"],
+                website: "https://uwed.uz", contact: "+998 71 267-67-69"
+            },
+            { 
+                name: "O'zbekiston Milliy Universiteti", region: "Toshkent", cat: "law", 
+                desc: "O'zbekistonning eng yirik va eng qadimiy universiteti.",
+                longDesc: "Mirzo Ulug'bek nomidagi O'zbekiston Milliy universiteti fundamental fanlar va ijtimoiy-gumanitar yo'nalishlar bo'yicha Markaziy Osiyodagi yetakchi oliygohlardan biri.",
+                faculties: ["Huquq", "Iqtisodiyot", "Fizika", "Matematika", "Tarix"],
+                website: "https://nuu.uz", contact: "+998 71 246-02-24"
+            },
+            { 
+                name: "Toshkent Davlat Texnika Universiteti", region: "Toshkent", cat: "it", 
+                desc: "Texnika va muhandislik yo'nalishlari tayanchi.",
+                longDesc: "Islom Karimov nomidagi TDTU O'zbekistonning sanoat va texnika sohasida injener kadrlar tayyorlovchi asosiy universitetidir.",
+                faculties: ["Mexanika", "Elektronika", "Energetika", "IT muhandislik"],
+                website: "https://tdtu.uz", contact: "+998 71 246-46-00"
+            },
+            { 
+                name: "Farg'ona Davlat Universiteti", region: "Farg'ona", cat: "law", 
+                desc: "Farg'ona vodiysidagi nufuzli OTM.",
+                longDesc: "FarDU Farg'ona viloyatining markaziy oliy ta'lim muassasasi bo'lib, ko'plab gumanitar va aniq fanlar mutaxassislarini yetishtiradi.",
+                faculties: ["Tarix", "Filologiya", "Fizika-matematika", "Ijtimoiy-iqtisodiy"],
+                website: "https://fdu.uz", contact: "+998 73 244-44-02"
+            },
+            { 
+                name: "Urganch Davlat Universiteti", region: "Xorazm", cat: "economy", 
+                desc: "Xorazm mintaqasidagi asosiy universitet.",
+                longDesc: "Urganch davlat universiteti Xorazm viloyatining ta'lim va fan o'chog'i bo'lib xizmat qiladi.",
+                faculties: ["Iqtisodiyot", "Tarix", "Kimyo-texnologiya", "Xorijiy tillar"],
+                website: "https://urdu.uz", contact: "+998 62 224-67-00"
+            },
+            { 
+                name: "Andijon Davlat Universiteti", region: "Andijon", cat: "medicine", 
+                desc: "Andijondagi yirik oliygoh.",
+                longDesc: "Andijon davlat universiteti qator gumanitar va ijtimoiy fanlar hamda tabiiy fanlar bo'yicha talabalarga tahsil beradi.",
+                faculties: ["Tabiiy fanlar", "Tarix", "Pedagogika"],
+                website: "https://adu.uz", contact: "+998 74 223-88-30"
+            },
+            { 
+                name: "Samarqand Davlat Universiteti", region: "Samarqand", cat: "it", 
+                desc: "Qadimiy va boy tarixga ega universitet.",
+                longDesc: "Sharof Rashidov nomidagi Samarqand davlat universiteti yurtimizdagi eng keksa va nufuzli universitetlar qatoriga kiradi.",
+                faculties: ["Raqamli texnologiyalar", "Iqtisodiyot", "Huquq"],
+                website: "https://samdu.uz", contact: "+998 66 239-11-40"
+            },
+            {
+                name: "Buxoro Davlat Universiteti", region: "Buxoro", cat: "economy",
+                desc: "Buxorodagi yetakchi ilmiy markaz.",
+                longDesc: "BuxDU viloyatning eng nufuzli ta'lim dargohlaridan bo'lib, ko'plab yo'nalishlar, jumladan turizm va iqtisodiyot bo'yicha kadrlar tayyorlaydi.",
+                faculties: ["Turizm", "Iqtisodiyot", "Tarix"],
+                website: "https://buxdu.uz", contact: "+998 65 221-29-14"
+            },
+            {
+                name: "Termiz Davlat Universiteti", region: "Surxondaryo", cat: "law",
+                desc: "Surxondaryo viloyatining yirik oliygohi.",
+                longDesc: "TerDU asosan ijtimoiy-gumanitar hamda aniq fanlar yo'nalishida pedagoglar va yetuk mutaxassislar tayyorlaydi.",
+                faculties: ["Huquq", "Iqtisodiyot", "Tabiiy fanlar"],
+                website: "https://tersu.uz", contact: "+998 76 221-74-55"
+            },
+            {
+                name: "TATU Farg'ona filiali", region: "Farg'ona", cat: "it",
+                desc: "Vodiydagi IT sohasining poydevori.",
+                longDesc: "Muhammad al-Xorazmiy nomidagi TATU Farg'ona filiali asosan dasturchilar, aloqa injenerlari va telekommunikatsiya mutaxassislarini yetishtiradi.",
+                faculties: ["Dasturiy injiniring", "Telekommunikatsiya"],
+                website: "https://tatuff.uz", contact: "+998 73 226-82-09"
+            },
+            {
+                name: "TTA Urganch filiali", region: "Xorazm", cat: "medicine",
+                desc: "Tibbiyot sohasida mintaqaviy markaz.",
+                longDesc: "Toshkent tibbiyot akademiyasi Urganch filiali Xorazm va Qoraqalpog'iston hududlari uchun malakali shifokorlar tayyorlab beradi.",
+                faculties: ["Davolash", "Pediatriya", "Stomatologiya"],
+                website: "https://ttauf.uz", contact: "+998 62 227-34-31"
+            },
+            {
+                name: "Qarshi Davlat Universiteti", region: "Qashqadaryo", cat: "law",
+                desc: "Qashqadaryoning katta ta'lim muassasasi.",
+                longDesc: "QarDU nafaqat Qashqadaryo, balki butun janubiy mintaqa yoshlari uchun o'qish imkonini taqdim etuvchi oliygohdir.",
+                faculties: ["Tarix", "Fizika-matematika", "Ingliz tili"],
+                website: "https://qarshi.uz", contact: "+998 75 225-34-14"
+            },
+            {
+                name: "Guliston Davlat Universiteti", region: "Sirdaryo", cat: "economy",
+                desc: "Sirdaryo viloyatidagi eng yirik OTM.",
+                longDesc: "GulDU nafaqat Sirdaryo, balki qo'shni hududlar yoshlari uchun ham ochiq va keng ko'lamli universitet hisoblanadi.",
+                faculties: ["Iqtisodiyot", "Tabiiy fanlar", "Fizika-matematika"],
+                website: "https://guldu.uz", contact: "+998 67 225-40-42"
+            },
+            {
+                name: "Namangan Davlat Universiteti", region: "Namangan", cat: "economy",
+                desc: "Namangan shahridagi klassik universitet.",
+                longDesc: "NamDU vodiydagi eng keksa va tajribali ta'lim maskanlaridan bo'lib, o'z yo'nalishida nufuzli.",
+                faculties: ["Iqtisodiyot", "Tarix", "Pedagogika"],
+                website: "https://namdu.uz", contact: "+998 69 227-01-44"
+            },
+            {
+                name: "Jizzax Davlat Pedagogika Universiteti", region: "Jizzax", cat: "it",
+                desc: "Jizzax viloyati ta'lim dargohi.",
+                longDesc: "JDPU kelajak avlod ustozlarini tayyorlash borasida yirik tajribaga ega bo'lgan institutdan universitet maqomiga ko'tarilgan OTM.",
+                faculties: ["Fizika-matematika", "Informatika", "Tarix"],
+                website: "https://jdpu.uz", contact: "+998 72 226-13-57"
+            }
+            ,
+            {
+                name: "Nukus Davlat Universiteti", region: "Nukus", cat: "law",
+                desc: "Qoraqalpog'istonning tashqi aloqalar va fan markazi.",
+                longDesc: "Nukus davlat universiteti mintaqaviy muhim oliy ta'lim muassasasi bo'lib, gumanitar va tabiiy fanlarni rivojlantiradi.",
+                faculties: ["Filologiya", "Tarix", "Tabiiy fanlar"],
+                website: "https://ndu.uz", contact: "+998 61 222-11-33"
+            },
+            {
+                name: "Navoi Davlat Mining Institute", region: "Navoiy", cat: "economy",
+                desc: "Mineral resurslar va geologiya yo'nalishlarida ixtisoslashgan.",
+                longDesc: "Navoiy mintaqasining konchilik resurslarini o'rganishga qaratilgan ta'lim markazi.",
+                faculties: ["Geologiya", "Konchilik", "Iqtisodiyot"],
+                website: "https://navoi-institute.uz", contact: "+998 79 223-10-10"
+            },
+            {
+                name: "Qo'qon Davlat Universiteti", region: "Farg'ona", cat: "it",
+                desc: "Valleydagi yetakchi pedagogik va texnik markaz.",
+                longDesc: "Qo'qon davlat universiteti hududiy rivojlanish uchun muhandislik va gumanitar mutaxassislarni tayyorlaydi.",
+                faculties: ["Informatika", "Texnika", "Pedagogika"],
+                website: "https://qdu.uz", contact: "+998 73 227-55-77"
+            },
+            {
+                name: "FerG'ona Politexnika Instituti", region: "Farg'ona", cat: "it",
+                desc: "Sanoat va texnologik ta'limga ixtisoslashgan.",
+                longDesc: "Ferghana politexnika instituti mintaqaviy sanoat ehtiyojlariga mos kadrlar tayyorlaydi.",
+                faculties: ["Mexanika", "Elektronika", "Informatika"],
+                website: "https://fpi.uz", contact: "+998 73 224-44-88"
+            },
+            {
+                name: "Kolledj va Texnika Universiteti (Kokand)", region: "Farg'ona", cat: "it",
+                desc: "Kokanddagi texnik va kasb-hunar markazi.",
+                longDesc: "Kokand texnika universiteti hududiy texnik mutaxassislarni yetishtiradi.",
+                faculties: ["Telekommunikatsiya", "Dasturiy injiniring", "Sanoat texnikasi"],
+                website: "https://kokandtech.uz", contact: "+998 73 225-12-34"
+            },
+            {
+                name: "Karshi Muhandislik Instituti", region: "Qashqadaryo", cat: "it",
+                desc: "Muhandislik va agrar texnika yo'nalishlari.",
+                longDesc: "Janubiy mintaqaga xizmat qiluvchi muhandislik kadrlarini tayyorlaydi.",
+                faculties: ["Mexanika", "Qishloq xo'jalik texnikasi"],
+                website: "https://kmi.uz", contact: "+998 75 225-00-55"
+            },
+            {
+                name: "Guliston Agro Universiteti", region: "Sirdaryo", cat: "economy",
+                desc: "Qishloq xo'jaligi va agroiqtisodiyotga ixtisoslashgan.",
+                longDesc: "Agrotexnika va agrar menejment sohalarida malakali mutaxassislar tayyorlaydi.",
+                faculties: ["Agronomiya", "Agroiqtisodiyot"],
+                website: "https://agro-gul.uz", contact: "+998 67 225-99-11"
+            },
+            {
+                name: "Navoiy Davlat Pedagogika Instituti", region: "Navoiy", cat: "law",
+                desc: "Mintaqaviy pedagogika va o'qituvchilar tayyorlash markazi.",
+                longDesc: "Navoiydagi o'qituvchilarni tayyorlash va metodika markazi.",
+                faculties: ["Pedagogika", "Filologiya"],
+                website: "https://navoipeda.uz", contact: "+998 79 223-44-66"
+            },
+            {
+                name: "Nukus Tibbiyot Instituti", region: "Nukus", cat: "medicine",
+                desc: "Qoraqalpog'iston tibbiyot kadrlarini tayyorlovchi muassasa.",
+                longDesc: "Nukus tibbiyot instituti mintaqaviy sog'liqni saqlash sohasida malaka oshirishga xizmat qiladi.",
+                faculties: ["Davolash ishi", "Pediatriya"],
+                website: "https://nukusmed.uz", contact: "+998 61 222-55-00"
+            },
+            {
+                name: "Samarkand Iqtisodiyot Instituti", region: "Samarqand", cat: "economy",
+                desc: "Iqtisodiy va menejment yo'nalishlarida mutaxassislar.",
+                longDesc: "Hududiy iqtisodiyot va biznes sohasida kadrlar tayyorlashga ixtisoslashgan.",
+                faculties: ["Iqtisodiyot", "Menejment"],
+                website: "https://sam-econ.uz", contact: "+998 66 239-22-11"
+            },
+            {
+                name: "Andijon Muhandislik Instituti", region: "Andijon", cat: "it",
+                desc: "Andijon viloyatidagi muhandislik va sanoat ta'limi markazi.",
+                longDesc: "Sanoat ishlab chiqarishiga yo'naltirilgan muhandislar tayyorlaydi.",
+                faculties: ["Mexanika", "Elektronika", "Informatika"],
+                website: "https://andeng.uz", contact: "+998 74 223-11-22"
+            }
+        ];
+
+        function filterUnis() {
+            const query = document.getElementById('uni-search').value.toLowerCase();
+            const region = document.getElementById('filter-region').value;
+            const category = document.getElementById('filter-category').value;
+
+            const filtered = unisData.filter(u => {
+                const matchesSearch = u.name.toLowerCase().includes(query);
+                const matchesRegion = region === 'all' || u.region === region;
+                const matchesCat = category === 'all' || u.cat === category;
+                return matchesSearch && matchesRegion && matchesCat;
+            });
+
+            renderUnis(filtered);
+        }
+
+        function renderUnis(data) {
+            const grid = document.getElementById('uni-grid');
+            grid.innerHTML = "";
+            
+            if(data.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;">
+                    Hech qanday OTM topilmadi.
+                </div>`;
+                return;
+            }
+
+            data.forEach(u => {
+                const tagClass = `tag-${u.cat}`;
+                grid.innerHTML += `
+                <div class="uni-card">
+                    <div>
+                        <h4 style="color:var(--accent); font-family:'Space Grotesk'">${u.name}</h4>
+                        <p style="font-size:13px; color:#94a3b8; margin-top:10px;">${u.desc}</p>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <div>
+                            <span class="uni-tag" style="background:rgba(255,255,255,0.05); color:#cbd5e1">${u.region}</span>
+                            <span class="uni-tag ${tagClass}">${u.cat.toUpperCase()}</span>
+                        </div>
+                        <button class="btn-glow" style="padding:10px; font-size:12px; margin-top:15px;" onclick="showUniDetails('${u.name}')">BATAFSIL</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function showUniDetails(name) {
+            const uni = unisData.find(u => u.name === name);
+            if(!uni) return;
+
+            const container = document.getElementById('uni-details-content');
+            container.innerHTML = `
+                <div class="detail-header">
+                    <div class="detail-img">${uni.name[0]}</div>
+                    <div>
+                        <h1 style="margin-bottom:5px;">${uni.name}</h1>
+                        <p style="color:var(--accent); font-weight:bold;">${uni.region} | ${uni.cat.toUpperCase()}</p>
+                    </div>
+                </div>
+                
+                <div class="ai-box" style="margin-bottom:30px;">
+                    <h3 style="color:var(--primary); margin-bottom:10px;">Oliy-ta'lim muassasasi haqida:</h3>
+                    <p style="line-height:1.6; color:#cbd5e1;">${uni.longDesc}</p>
+                </div>
+
+                <h3 style="margin-bottom:15px;">Fakultetlar va Yo'nalishlar:</h3>
+                <div class="fac-list">
+                    ${uni.faculties.map(f => `<div class="fac-item">${f}</div>`).join('')}
+                </div>
+
+                <div class="info-grid">
+                    <div class="input-group">
+                        <label>Veb-sayt</label>
+                        <a href="${uni.website}" target="_blank" style="color:var(--accent); text-decoration:none;">${uni.website}</a>
+                    </div>
+                    <div class="input-group">
+                        <label>Kontakt</label>
+                        <p style="color:white;">${uni.contact}</p>
+                    </div>
+                </div>
+            `;
+            show('uni-details');
+        }
+
+        function buildUniGrid() {
+            document.getElementById('filter-category').value = 'all';
+            filterUnis();
+        }
+
+        
+
+        function startDTMTest(){
+            if(selectedSubjects.length!==2) return;
+            currentQuizMode='dtm';
+            show('test');
+            const list=document.getElementById('test-list');
+            list.innerHTML='';
+            let qNum=0;
+            function addSection(title,questions,key,perQ){
+                if (!questions) return; // if questions missing for some reason
+                list.innerHTML+=`<div class="section-label">${title} (${questions.length} savol × ${perQ} ball)</div>`;
+                questions.forEach((q,i)=>{
+                    qNum++;
+                    const opts=q[1].map((o,j)=>`<div class="opt" data-q="${key}_${i}" data-v="${j}" onclick="selectOpt(this)">${o}</div>`).join('');
+                    list.innerHTML+=`<div class="q-card"><p><b>${qNum}.</b> ${q[0]}</p><div class="opt-list">${opts}</div></div>`;
+                });
+            }
+            const mjOnaLvl = document.getElementById('cert-maj-ona').value;
+            if(mjOnaLvl !== 'none') {
+                list.innerHTML+=`<div class="section-label">Ona tili (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjOnaLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (100%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>11.0 ball</b> taqdim etiladi.</p></div>`;
+            } else {
+                addSection('Ona tili',QB.ona_tili,'ona_tili',1.1);
+            }
+
+            const mjMatLvl = document.getElementById('cert-maj-mat').value;
+            if(mjMatLvl !== 'none') {
+                list.innerHTML+=`<div class="section-label">Matematika (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjMatLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (100%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>11.0 ball</b> taqdim etiladi.</p></div>`;
+            } else {
+                addSection('Matematika',QB.matematika,'matematika',1.1);
+            }
+
+            const mjTarLvl = document.getElementById('cert-maj-tar').value;
+            if(mjTarLvl !== 'none') {
+                list.innerHTML+=`<div class="section-label">O'zbekiston tarixi (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjTarLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (100%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>11.0 ball</b> taqdim etiladi.</p></div>`;
+            } else {
+                addSection("O'zbekiston tarixi",QB.tarix,'tarix',1.1);
+            }
+            
+            const s1=electives.find(e=>e.id===selectedSubjects[0]);
+            const s2=electives.find(e=>e.id===selectedSubjects[1]);
+            
+            const lvl1 = document.getElementById('cert-1-lvl').value;
+            const hasCert1 = lvl1 !== 'none';
+            const c1Score = Math.min(100, Math.max(0, parseInt(document.getElementById('cert-1-score').value) || 0));
+
+            const lvl2 = document.getElementById('cert-2-lvl').value;
+            const hasCert2 = lvl2 !== 'none';
+            const c2Score = Math.min(100, Math.max(0, parseInt(document.getElementById('cert-2-score').value) || 0));
+
+            if(hasCert1) {
+                const perc = (lvl1 === 'A+' || lvl1 === 'A') ? 100 : c1Score;
+                const c1Final = +((perc / 100) * 93).toFixed(1);
+                list.innerHTML+=`<div class="section-label">${s1.name} (1-fan)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${lvl1} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (${perc}%) ko'rsatkichingiz asosida sizga maksimal 93 balldan <b>${c1Final} ball</b> taqdim etiladi.</p></div>`;
+            } else {
+                addSection(s1.name+' (1-fan)',QB[selectedSubjects[0]],selectedSubjects[0],3.1);
+            }
+
+            if(hasCert2) {
+                const perc = (lvl2 === 'A+' || lvl2 === 'A') ? 100 : c2Score;
+                const c2Final = +((perc / 100) * 63).toFixed(1);
+                list.innerHTML+=`<div class="section-label">${s2.name} (2-fan)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${lvl2} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (${perc}%) ko'rsatkichingiz asosida sizga maksimal 63 balldan <b>${c2Final} ball</b> taqdim etiladi.</p></div>`;
+            } else {
+                addSection(s2.name+' (2-fan)',QB[selectedSubjects[1]],selectedSubjects[1],2.1);
+            }
+
+            document.getElementById('progress-info').textContent=`Jami ishlash uchun: ${qNum} ta savol | Vaqt: 3 soat`;
+            timeLeft=10800;
+            timerInterval=setInterval(updateTimer,1000);
+        }
+        function selectOpt(el){
+            const qId=el.dataset.q;
+            document.querySelectorAll(`.opt[data-q="${qId}"]`).forEach(o=>o.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        function updateTimer(){
+            timeLeft--;
+            if(timeLeft<=0){clearInterval(timerInterval);calculateDTMResults();return;}
+            const h=Math.floor(timeLeft/3600),m=Math.floor((timeLeft%3600)/60),s=timeLeft%60;
+            document.getElementById('timer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        function calculateDTMResults(){
+            clearInterval(timerInterval);
+            if(currentQuizMode==='mini'){
+                calculateMiniResults();
+                return;
+            }
+            function calcScore(questions,key,perQ, certObj){
+                const totalQ = questions ? questions.length : 30;
+                if(certObj && certObj.has) {
+                    const maxB = +(totalQ * perQ).toFixed(1);
+                    const finalScore = +((certObj.score / 100) * maxB).toFixed(1);
+                    return {correct: Math.round((certObj.score/100)*totalQ), total: totalQ, score: finalScore, max: maxB, isCert: true, lvl: certObj.lvl};
+                }
+                let correct=0;
+                if(questions) {
+                    questions.forEach((q,i)=>{
+                        const sel=document.querySelector(`.opt.selected[data-q="${key}_${i}"]`);
+                        if(sel && parseInt(sel.dataset.v)===q[2]) correct++;
+                    });
+                    return {correct,total:totalQ,score:+(correct*perQ).toFixed(1),max:+(totalQ*perQ).toFixed(1)};
+                }
+                return {correct:0,total:0,score:0,max:0};
+            }
+            
+            const lvl1 = document.getElementById('cert-1-lvl').value;
+            const c1Score = (lvl1 === 'A+' || lvl1 === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-1-score').value) || 0));
+            const lvl2 = document.getElementById('cert-2-lvl').value;
+            const c2Score = (lvl2 === 'A+' || lvl2 === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-2-score').value) || 0));
+
+            const mjOnaLvl = document.getElementById('cert-maj-ona').value;
+            const mjOnaScore = mjOnaLvl !== 'none' ? 100 : 0;
+
+            const mjMatLvl = document.getElementById('cert-maj-mat').value;
+            const mjMatScore = mjMatLvl !== 'none' ? 100 : 0;
+
+            const mjTarLvl = document.getElementById('cert-maj-tar').value;
+            const mjTarScore = mjTarLvl !== 'none' ? 100 : 0;
+
+            const r1=calcScore(QB.ona_tili,'ona_tili',1.1, {has: mjOnaLvl!=='none', score: mjOnaScore, lvl: mjOnaLvl});
+            const r2=calcScore(QB.matematika,'matematika',1.1, {has: mjMatLvl!=='none', score: mjMatScore, lvl: mjMatLvl});
+            const r3=calcScore(QB.tarix,'tarix',1.1, {has: mjTarLvl!=='none', score: mjTarScore, lvl: mjTarLvl});
+            const r4=calcScore(QB[selectedSubjects[0]],selectedSubjects[0],3.1, {has: lvl1!=='none', score: c1Score, lvl: lvl1});
+            const r5=calcScore(QB[selectedSubjects[1]],selectedSubjects[1],2.1, {has: lvl2!=='none', score: c2Score, lvl: lvl2});
+            
+            const total=+(r1.score+r2.score+r3.score+r4.score+r5.score).toFixed(1);
+            show('result');
+            document.getElementById('res-score').textContent=total;
+            const s1n=electives.find(e=>e.id===selectedSubjects[0]).name;
+            const s2n=electives.find(e=>e.id===selectedSubjects[1]).name;
+            const bd=document.getElementById('score-breakdown');
+            bd.innerHTML='';
+            [{n:'Ona tili',r:r1,c:'#22d3ee'},{n:'Matematika',r:r2,c:'#a855f7'},{n:"O'zb. tarixi",r:r3,c:'#f59e0b'},{n:s1n+' (3.1)',r:r4,c:'#6366f1'},{n:s2n+' (2.1)',r:r5,c:'#10b981'}].forEach(item=>{
+                const pct=item.r.max>0?(item.r.score/item.r.max*100):0;
+                const txt = item.r.isCert ? `<span style="color:var(--accent)">🏆 Sertifikat ${item.r.lvl} (${item.r.score}/${item.r.max} ball)</span>` : `${item.r.correct}/${item.r.total} to'g'ri — ${item.r.score}/${item.r.max} ball`;
+                bd.innerHTML+=`<div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${item.n}</span><span>${txt}</span></div><div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${item.c}"></div></div></div>`;
+            });
+            // Recommend universities
+            const catKey=selectedSubjects[0]+'_'+selectedSubjects[1];
+            let cat=subjectToCategory[catKey]||'it';
+            const recUnis=unisData.filter(u=>u.cat===cat);
+            const recDiv=document.getElementById('rec-unis');
+            recDiv.innerHTML='';
+            if(recUnis.length===0){
+                recDiv.innerHTML='<p style="color:#94a3b8">Mos OTM topilmadi.</p>';
+            } else {
+                recUnis.forEach(u=>{
+                    const canGrant=total>=150;
+                    recDiv.innerHTML+=`<div class="rec-card"><h4 style="color:var(--accent)">${u.name}</h4><p style="font-size:13px;color:#94a3b8;margin-top:5px">${u.desc}</p><p style="margin-top:8px;font-size:12px;color:${canGrant?'#34d399':'#fbbf24'};font-weight:700">${canGrant?'✅ Grant imkoniyati yuqori':'⚠️ Kontrakt asosida'}</p></div>`;
+                });
+            }
+            // AI analysis
+            runAIAnalysis(total,r1,r2,r3,r4,r5,s1n,s2n);
+        }
+
+        // calculateMiniResults() removed as mini practice UI is disabled.
+
+        function runAIAnalysis(total, r1, r2, r3, r4, r5, s1n, s2n){
+            const aiText = document.getElementById('ai-text');
+            const aiLoad = document.getElementById('ai-loading');
+            
+            aiLoad.classList.remove('hidden');
+            aiText.textContent = '';
+            
+            // Simulating AI thinking time
+            setTimeout(() => {
+                aiLoad.classList.add('hidden');
+                
+                const percent = ((total / 189) * 100).toFixed(1);
+                
+                let advice = `Sizning jami ballingiz: ${total} / 189 (${percent}%)\n\n`;
+                
+                // 1. Umumiy baho va Imkoniyatlar
+                advice += `🎯 UMUMIY XULOSA:\n`;
+                if(total >= 160) {
+                    advice += `Ajoyib natija! Sizda Davlat granti asosida o'qish imkoniyati juda yuqori (90%+). Shu tempda davom eting va o'z ustingizda ishlashni to'xtatmang.\n`;
+                } else if(total >= 130) {
+                    advice += `Yaxshi natija. Sizda to'lov-kontrakt asosida ko'plab OTMlarga kirish imkoniyati mavjud. Ayrim viloyat OTMlarida yoki yangi yo'nalishlarda grantga ham ilinish mumkin.\n`;
+                } else if(total >= 90) {
+                    advice += `O'rtacha natija. To'lov-kontrakt yoki super-kontrakt asosida o'qish imkoniyati bor. Sizga kuchliroq tayyorgarlik ko'rishni tavsiya qilaman.\n`;
+                } else {
+                    advice += `Qoniqarsiz natija. Hozirgi bilimingiz bilan OTMga kirish juda qiyin. Asosiy fanlardan qo'shimcha darslarga qatnashishni qat'iy tavsiya qilaman.\n`;
+                }
+                
+                // 2. Kuchli va Zaif tomonlar
+                advice += `\n📊 FANLAR TAHLILI:\n`;
+                const subjects = [
+                    {name: 'Ona tili', r: r1},
+                    {name: 'Matematika', r: r2},
+                    {name: "O'zb. tarixi", r: r3},
+                    {name: s1n, r: r4},
+                    {name: s2n, r: r5}
+                ];
+                
+                let weakSubjects = [];
+                let strongSubjects = [];
+                
+                subjects.forEach(sub => {
+                    const p = sub.r.max > 0 ? (sub.r.score / sub.r.max) * 100 : 0;
+                    if(p < 50) weakSubjects.push(sub.name);
+                    else if(p > 80) strongSubjects.push(sub.name);
+                });
+                
+                if(strongSubjects.length > 0) {
+                    advice += `✅ Kuchli fanlaringiz: ${strongSubjects.join(', ')}. Bu fanlardan o'zlashtirish darajangiz yuqori.\n`;
+                }
+                if(weakSubjects.length > 0) {
+                    advice += `⚠️ E'tibor qaratish kerak bo'lgan fanlar: ${weakSubjects.join(', ')}. Ushbu fanlardan 50% dan past natija ko'rsatdingiz.\n`;
+                } else {
+                    advice += `Barcha fanlardan o'zlashtirish darajangiz bir maromda.\n`;
+                }
+
+                // 3. Maslahatlar
+                advice += `\n💡 AI TAVSIYASI:\n`;
+                if (r4.score/r4.max < 0.6 || r5.score/r5.max < 0.6) {
+                    advice += `1. Mutaxassislik fanlaridan (3.1 va 2.1 ball beruvchi) ko'proq test ishlang. Ular umumiy balingizning katta qismini tashkil qiladi.\n`;
+                }
+                if (r1.score/r1.max < 0.5 || r2.score/r2.max < 0.5 || r3.score/r3.max < 0.5) {
+                    advice += `2. Majburiy fanlarga beparvo bo'lmang. Kichik ballar (1.1) yakunda hal qiluvchi bo'lishi mumkin.\n`;
+                }
+                advice += `3. Vaqtni taqsimlashni mashq qiling. Test jarayonida har bir savolga maksimal 2 daqiqa ajrating.\n`;
+                
+                aiText.textContent = advice;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

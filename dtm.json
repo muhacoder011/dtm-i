@@ -1,0 +1,127 @@
+{
+  "title": "DTM Mini Test",
+  "subject": "Mixed",
+  "totalQuestions": 10,
+  "questions": [
+    {
+      "id": 1,
+      "subject": "English",
+      "question": "If I _____ enough money, I would buy a new laptop.",
+      "options": {
+        "A": "have",
+        "B": "had",
+        "C": "will have",
+        "D": "has"
+      },
+      "answer": "B"
+    },
+    {
+      "id": 2,
+      "subject": "English",
+      "question": "Choose the synonym of 'robust'.",
+      "options": {
+        "A": "Weak",
+        "B": "Strong",
+        "C": "Tiny",
+        "D": "Slow"
+      },
+      "answer": "B"
+    },
+    {
+      "id": 3,
+      "subject": "Ona tili",
+      "question": "Qaysi so'z imloviy jihatdan to'g'ri yozilgan?",
+      "options": {
+        "A": "Xoxlayman",
+        "B": "Hoxlayman",
+        "C": "Xohlayman",
+        "D": "Hohlayman"
+      },
+      "answer": "C"
+    },
+    {
+      "id": 4,
+      "subject": "Mantiq",
+      "question": "Davom ettiring: 2, 6, 12, 20, 30, ?",
+      "options": {
+        "A": "40",
+        "B": "42",
+        "C": "44",
+        "D": "48"
+      },
+      "answer": "B"
+    },
+    {
+      "id": 5,
+      "subject": "English",
+      "question": "Choose the correct sentence.",
+      "options": {
+        "A": "She don't like coffee.",
+        "B": "She doesn't likes coffee.",
+        "C": "She doesn't like coffee.",
+        "D": "She not like coffee."
+      },
+      "answer": "C"
+    },
+    {
+      "id": 6,
+      "subject": "Ona tili",
+      "question": "Qaysi gapda tinish belgisi to'g'ri qo'llangan?",
+      "options": {
+        "A": "Salom do'stim, qalaysan?",
+        "B": "Salom, do'stim qalaysan?",
+        "C": "Salom do'stim qalaysan.",
+        "D": "Salom, do'stim, qalaysan?"
+      },
+      "answer": "D"
+    },
+    {
+      "id": 7,
+      "subject": "Mantiq",
+      "question": "Agar barcha mushuklar hayvon bo'lsa va ayrim hayvonlar yovvoyi bo'lsa, qaysi biri albatta to'g'ri?",
+      "options": {
+        "A": "Barcha mushuklar yovvoyi.",
+        "B": "Ayrim mushuklar yovvoyi.",
+        "C": "Barcha mushuklar hayvon.",
+        "D": "Hech biri."
+      },
+      "answer": "C"
+    },
+    {
+      "id": 8,
+      "subject": "English",
+      "question": "Choose the correct passive sentence.",
+      "options": {
+        "A": "The bridge built in 2020.",
+        "B": "The bridge was built in 2020.",
+        "C": "The bridge is built in 2020.",
+        "D": "The bridge has build in 2020."
+      },
+      "answer": "B"
+    },
+    {
+      "id": 9,
+      "subject": "Matematika",
+      "question": "Agar 3x - 5 = 16, x = ?",
+      "options": {
+        "A": "5",
+        "B": "6",
+        "C": "7",
+        "D": "8"
+      },
+      "answer": "C"
+    },
+    {
+      "id": 10,
+      "subject": "Mantiq",
+      "question": "Soat 3:00 da minut va soat strelkalari orasidagi burchak nechaga teng?",
+      "options": {
+        "A": "60°",
+        "B": "90°",
+        "C": "120°",
+        "D": "180°"
+      },
+      "answer": "B"
+    }
+  ]
+}
