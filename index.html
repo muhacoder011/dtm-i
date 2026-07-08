@@ -148,7 +148,7 @@
             
             <div class="ai-box" style="margin-bottom:25px">
                 <h4 style="color:var(--accent);margin-bottom:10px">🏆 Milliy va Xalqaro Sertifikatlar:</h4>
-                <p style="color:#94a3b8;font-size:13px;margin-bottom:15px">Agar sizda sertifikat bo'lsa darajasini va olgan balingizni (0-100 oralig'ida) kiriting. DTM ballingiz shunga mos hisoblanadi.</p>
+                <p style="color:#94a3b8;font-size:13px;margin-bottom:15px">Agar sizda sertifikat bo'lsa darajasini tanlang. Majburiy fanlar uchun ballar so'ralmaydi; asosiy fanlar uchun C/C+/B/B+ qiymatlari maxsus diapazonga cheklangan.</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
                     <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
                         <label id="cert-1-label" style="display:block;margin-bottom:8px;font-size:14px;color:white">1-fan uchun sertifikat</label>
@@ -156,12 +156,12 @@
                             <option value="none">Sertifikat yo'q</option>
                             <option value="A+">A+ daraja (100%)</option>
                             <option value="A">A daraja (100%)</option>
-                            <option value="B+">B+ daraja (% kiritish)</option>
-                            <option value="B">B daraja (% kiritish)</option>
-                            <option value="C+">C+ daraja (% kiritish)</option>
-                            <option value="C">C daraja (% kiritish)</option>
+                            <option value="B+">B+ daraja (60-64.9)</option>
+                            <option value="B">B daraja (55-59.9)</option>
+                            <option value="C+">C+ daraja (50-54.9)</option>
+                            <option value="C">C daraja (46-49.9)</option>
                         </select>
-                        <input type="number" id="cert-1-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" style="width:100%;display:none">
+                        <input type="number" id="cert-1-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" oninput="clampCertInput(this)" style="width:100%;display:none">
                     </div>
                     <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
                         <label id="cert-2-label" style="display:block;margin-bottom:8px;font-size:14px;color:white">2-fan uchun sertifikat</label>
@@ -169,12 +169,12 @@
                             <option value="none">Sertifikat yo'q</option>
                             <option value="A+">A+ daraja (100%)</option>
                             <option value="A">A daraja (100%)</option>
-                            <option value="B+">B+ daraja (% kiritish)</option>
-                            <option value="B">B daraja (% kiritish)</option>
-                            <option value="C+">C+ daraja (% kiritish)</option>
-                            <option value="C">C daraja (% kiritish)</option>
+                            <option value="B+">B+ daraja (60-64.9)</option>
+                            <option value="B">B daraja (55-59.9)</option>
+                            <option value="C+">C+ daraja (50-54.9)</option>
+                            <option value="C">C daraja (46-49.9)</option>
                         </select>
-                        <input type="number" id="cert-2-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" style="width:100%;display:none">
+                        <input type="number" id="cert-2-score" placeholder="To'plagan balingiz (0-100)" min="0" max="100" oninput="clampCertInput(this)" style="width:100%;display:none">
                     </div>
                 </div>
             </div>
@@ -184,42 +184,39 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px">
                     <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
                         <label style="display:block;margin-bottom:8px;font-size:14px;color:white">Ona tili (Majburiy)</label>
-                        <select id="cert-maj-ona" onchange="toggleMajCert('cert-maj-ona','cert-maj-ona-score')" style="width:100%;margin-bottom:10px">
+                        <select id="cert-maj-ona" onchange="toggleMajCert('cert-maj-ona')" style="width:100%;margin-bottom:10px">
                             <option value="none">Sertifikat yo'q</option>
                             <option value="A+">A+ daraja (100%)</option>
                             <option value="A">A daraja (100%)</option>
-                            <option value="B+">B+ daraja (100%)</option>
-                            <option value="B">B daraja (100%)</option>
-                            <option value="C+">C+ daraja (100%)</option>
-                            <option value="C">C daraja (100%)</option>
+                            <option value="B+">B+ daraja</option>
+                            <option value="B">B daraja</option>
+                            <option value="C+">C+ daraja</option>
+                            <option value="C">C daraja</option>
                         </select>
-                        <input type="number" id="cert-maj-ona-score" placeholder="Sertifikat foizingiz (0-100)" min="0" max="100" style="width:100%;display:none;margin-top:8px">
                     </div>
                     <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
                         <label style="display:block;margin-bottom:8px;font-size:14px;color:white">Matematika (Majburiy)</label>
-                        <select id="cert-maj-mat" onchange="toggleMajCert('cert-maj-mat','cert-maj-mat-score')" style="width:100%;margin-bottom:10px">
+                        <select id="cert-maj-mat" onchange="toggleMajCert('cert-maj-mat')" style="width:100%;margin-bottom:10px">
                             <option value="none">Sertifikat yo'q</option>
                             <option value="A+">A+ daraja (100%)</option>
                             <option value="A">A daraja (100%)</option>
-                            <option value="B+">B+ daraja (100%)</option>
-                            <option value="B">B daraja (100%)</option>
-                            <option value="C+">C+ daraja (100%)</option>
-                            <option value="C">C daraja (100%)</option>
+                            <option value="B+">B+ daraja</option>
+                            <option value="B">B daraja</option>
+                            <option value="C+">C+ daraja</option>
+                            <option value="C">C daraja</option>
                         </select>
-                        <input type="number" id="cert-maj-mat-score" placeholder="Sertifikat foizingiz (0-100)" min="0" max="100" style="width:100%;display:none;margin-top:8px">
                     </div>
                     <div style="background:rgba(255,255,255,0.03);padding:15px;border-radius:12px;border:1px solid var(--border)">
                         <label style="display:block;margin-bottom:8px;font-size:14px;color:white">O'zb. tarixi (Majburiy)</label>
-                        <select id="cert-maj-tar" onchange="toggleMajCert('cert-maj-tar','cert-maj-tar-score')" style="width:100%;margin-bottom:10px">
+                        <select id="cert-maj-tar" onchange="toggleMajCert('cert-maj-tar')" style="width:100%;margin-bottom:10px">
                             <option value="none">Sertifikat yo'q</option>
                             <option value="A+">A+ daraja (100%)</option>
                             <option value="A">A daraja (100%)</option>
-                            <option value="B+">B+ daraja (100%)</option>
-                            <option value="B">B daraja (100%)</option>
-                            <option value="C+">C+ daraja (100%)</option>
-                            <option value="C">C daraja (100%)</option>
+                            <option value="B+">B+ daraja</option>
+                            <option value="B">B daraja</option>
+                            <option value="C+">C+ daraja</option>
+                            <option value="C">C daraja</option>
                         </select>
-                        <input type="number" id="cert-maj-tar-score" placeholder="Sertifikat foizingiz (0-100)" min="0" max="100" style="width:100%;display:none;margin-top:8px">
                     </div>
                 </div>
             </div>
@@ -405,14 +402,41 @@
             document.getElementById('start-btn').disabled=selectedSubjects.length!==2;
         }
 
+        const CERT_MAIN_GRADE_RANGES = {
+            'B+': { min: 60, max: 64.9, step: 0.1, label: '60-64.9' },
+            'B': { min: 55, max: 59.9, step: 0.1, label: '55-59.9' },
+            'C+': { min: 50, max: 54.9, step: 0.1, label: '50-54.9' },
+            'C': { min: 46, max: 49.9, step: 0.1, label: '46-49.9' }
+        };
+
         function toggleCertScore(num) {
             const lvl = document.getElementById(`cert-${num}-lvl`).value;
             const scoreInput = document.getElementById(`cert-${num}-score`);
-            if(lvl === 'none' || lvl === 'A+' || lvl === 'A') {
+            if(!scoreInput) return;
+            if(lvl === 'A+' || lvl === 'A' || lvl === 'none') {
                 scoreInput.style.display = 'none';
-                if(lvl === 'none') scoreInput.value = '';
-            } else {
+                scoreInput.value = '';
+                scoreInput.removeAttribute('min');
+                scoreInput.removeAttribute('max');
+                scoreInput.removeAttribute('step');
+                scoreInput.placeholder = "To'plagan balingiz (0-100)";
+                return;
+            }
+            const range = CERT_MAIN_GRADE_RANGES[lvl];
+            if(range) {
                 scoreInput.style.display = 'block';
+                scoreInput.min = range.min;
+                scoreInput.max = range.max;
+                scoreInput.step = range.step;
+                scoreInput.placeholder = range.label;
+                if(scoreInput.value) {
+                    const current = parseFloat(scoreInput.value);
+                    if(isNaN(current) || current < range.min || current > range.max) {
+                        scoreInput.value = range.min;
+                    }
+                }
+            } else {
+                scoreInput.style.display = 'none';
             }
         }
 
@@ -428,16 +452,24 @@
             'none': 0
         };
 
-        function toggleMajCert(selectId, inputId) {
+        function toggleMajCert(selectId) {
             const lvl = document.getElementById(selectId).value;
-            const scoreInput = document.getElementById(inputId);
-            if(!scoreInput) return;
-            if(lvl === 'none' || lvl === 'A+' || lvl === 'A'){
+            const scoreInput = document.getElementById(`${selectId}-score`);
+            if(scoreInput) {
                 scoreInput.style.display = 'none';
-                if(lvl === 'none') scoreInput.value = '';
-            } else {
-                scoreInput.style.display = 'block';
+                scoreInput.value = '';
             }
+        }
+
+        function clampCertInput(input) {
+            const min = parseFloat(input.min);
+            const max = parseFloat(input.max);
+            if(isNaN(min) || isNaN(max) || input.value === '') return;
+            let value = parseFloat(input.value);
+            if(isNaN(value)) return;
+            if(value < min) value = min;
+            if(value > max) value = max;
+            input.value = +value.toFixed(1);
         }
 
         const unisData = [
@@ -811,7 +843,7 @@
             }
             const mjOnaLvl = document.getElementById('cert-maj-ona').value;
             if(mjOnaLvl !== 'none') {
-                let mjOnaPerc = (mjOnaLvl === 'A+' || mjOnaLvl === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-ona-score').value) || 0));
+                const mjOnaPerc = MAJ_LEVEL_TO_PERC[mjOnaLvl] || 0;
                 const cFinal = +((mjOnaPerc / 100) * 11).toFixed(1);
                 list.innerHTML+=`<div class="section-label">Ona tili (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjOnaLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (${mjOnaPerc}%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>${cFinal} ball</b> taqdim etiladi.</p></div>`;
             } else {
@@ -820,7 +852,7 @@
 
             const mjMatLvl = document.getElementById('cert-maj-mat').value;
             if(mjMatLvl !== 'none') {
-                let mjMatPerc = (mjMatLvl === 'A+' || mjMatLvl === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-mat-score').value) || 0));
+                const mjMatPerc = MAJ_LEVEL_TO_PERC[mjMatLvl] || 0;
                 const mFinal = +((mjMatPerc / 100) * 11).toFixed(1);
                 list.innerHTML+=`<div class="section-label">Matematika (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjMatLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (${mjMatPerc}%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>${mFinal} ball</b> taqdim etiladi.</p></div>`;
             } else {
@@ -829,7 +861,7 @@
 
             const mjTarLvl = document.getElementById('cert-maj-tar').value;
             if(mjTarLvl !== 'none') {
-                let mjTarPerc = (mjTarLvl === 'A+' || mjTarLvl === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-tar-score').value) || 0));
+                const mjTarPerc = MAJ_LEVEL_TO_PERC[mjTarLvl] || 0;
                 const tFinal = +((mjTarPerc / 100) * 11).toFixed(1);
                 list.innerHTML+=`<div class="section-label">O'zbekiston tarixi (Majburiy)</div><div class="q-card" style="text-align:center;padding:40px"><h3 style="color:var(--accent)">🏆 Sizda ${mjTarLvl} darajali sertifikat mavjud!</h3><p style="color:#94a3b8;margin-top:10px">Ushbu blokdan ozod etildingiz. (${mjTarPerc}%) ko'rsatkichingiz asosida sizga maksimal 11.0 balldan <b>${tFinal} ball</b> taqdim etiladi.</p></div>`;
             } else {
@@ -908,13 +940,13 @@
             const c2Score = (lvl2 === 'A+' || lvl2 === 'A') ? 100 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-2-score').value) || 0));
 
             const mjOnaLvl = document.getElementById('cert-maj-ona').value;
-            const mjOnaScore = (mjOnaLvl === 'A+' || mjOnaLvl === 'A') ? 100 : (mjOnaLvl === 'none' ? 0 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-ona-score').value) || 0)));
+            const mjOnaScore = MAJ_LEVEL_TO_PERC[mjOnaLvl] || 0;
 
             const mjMatLvl = document.getElementById('cert-maj-mat').value;
-            const mjMatScore = (mjMatLvl === 'A+' || mjMatLvl === 'A') ? 100 : (mjMatLvl === 'none' ? 0 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-mat-score').value) || 0)));
+            const mjMatScore = MAJ_LEVEL_TO_PERC[mjMatLvl] || 0;
 
             const mjTarLvl = document.getElementById('cert-maj-tar').value;
-            const mjTarScore = (mjTarLvl === 'A+' || mjTarLvl === 'A') ? 100 : (mjTarLvl === 'none' ? 0 : Math.min(100, Math.max(0, parseInt(document.getElementById('cert-maj-tar-score').value) || 0)));
+            const mjTarScore = MAJ_LEVEL_TO_PERC[mjTarLvl] || 0;
 
             const r1=calcScore(QB.ona_tili,'ona_tili',1.1, {has: mjOnaLvl!=='none', score: mjOnaScore, lvl: mjOnaLvl});
             const r2=calcScore(QB.matematika,'matematika',1.1, {has: mjMatLvl!=='none', score: mjMatScore, lvl: mjMatLvl});
