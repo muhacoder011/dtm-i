@@ -971,6 +971,19 @@
                     s.contribution = +(s.r.score).toFixed(1);
                 });
 
+                // Points needed to reach common targets
+                const need150 = Math.max(0, 150 - total);
+                const need170 = Math.max(0, 170 - total);
+
+                // If no additional points needed for 150 (need150 === 0), show short congratulation
+                if (need150 === 0) {
+                    let msg = `Tabriklaymiz! Siz allaqachon maqsadga erishgansiz — jami ${total} / 189 ball. O'z ustingizda ishlashni davom ettiring. Albatta, omad!`;
+                    // If reached elite target, highlight
+                    if (need170 === 0) msg = `Ajoyib! Siz elit darajadagi maqsadga ham erishgansiz (${total}/189). O'z ustingizda ishlashni davom ettiring — omad!`;
+                    aiText.textContent = msg;
+                    return;
+                }
+
                 let admissionNote = '';
                 if (total >= 170) admissionNote = "Grantga qabul qilish imkoniyati juda yuqori (elit OTMlar).";
                 else if (total >= 150) admissionNote = "Grantga qabul qilish imkoniyati yuqori.";
